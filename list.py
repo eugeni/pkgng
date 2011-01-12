@@ -152,7 +152,7 @@ class ThingListModel(QtCore.QAbstractListModel):
 class Controller(QtCore.QObject):
     @QtCore.Slot(QtCore.QObject)
     def thingSelected(self, wrapper):
-        print 'User clicked on:', wrapper._thing.properties.Id
+        print 'User clicked on:', wrapper._name
 
 def list(si, pattern):
     packages = {}

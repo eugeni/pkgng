@@ -2,8 +2,8 @@ import Qt 4.7
 
 ListView {
     id: pythonList
-    width: 400
-    height: 200
+    width: 640
+    height: 480
 
     model: pythonListModel
 
@@ -36,10 +36,7 @@ ListView {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignBottom
                     }
-                
             }
-
-
 
             MouseArea {
                 anchors.fill: parent
