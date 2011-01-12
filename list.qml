@@ -11,35 +11,36 @@ ListView {
         Rectangle {
             width: pythonList.width
             height: 40
-            color: ((index % 2 == 0)?"#222":"#111")
+            color: (model.thing.is_title)?"#4867b5":"#fff"
 
             Item {
                 width: 400; height: 40
                 anchors.centerIn: parent
+                visible: model.thing.is_title
 
                     Text {
+                        anchors.centerIn: parent
                         id: category
-                        font.bold: true
+                        font.weight: Font.Bold
                         text: model.thing.name
                         color: "white"
                         verticalAlignment: Text.AlignBottom
-                        visible: model.thing.is_title
                     }
             }
 
             Item {
                 width: 400; height: 40
+                visible: !model.thing.is_title
 
                     Text {
                         id: title
                         elide: Text.ElideRight
                         text: model.thing.name
-                        color: "white"
+                        color: "black"
                         font.bold: true
                         anchors.leftMargin: 10
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
-                        visible: !model.thing.is_title
                     }
                     Text {
                         id: subtitle
@@ -50,7 +51,6 @@ ListView {
                         anchors.topMargin: 25
                         anchors.fill: parent
                         verticalAlignment: Text.AlignBottom
-                        visible: !model.thing.is_title
                     }
             }
 
