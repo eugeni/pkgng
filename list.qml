@@ -15,6 +15,20 @@ ListView {
 
             Item {
                 width: 400; height: 40
+                anchors.centerIn: parent
+
+                    Text {
+                        id: category
+                        font.bold: true
+                        text: model.thing.name
+                        color: "white"
+                        verticalAlignment: Text.AlignBottom
+                        visible: model.thing.is_title
+                    }
+            }
+
+            Item {
+                width: 400; height: 40
 
                     Text {
                         id: title
@@ -25,6 +39,7 @@ ListView {
                         anchors.leftMargin: 10
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
+                        visible: !model.thing.is_title
                     }
                     Text {
                         id: subtitle
@@ -35,6 +50,7 @@ ListView {
                         anchors.topMargin: 25
                         anchors.fill: parent
                         verticalAlignment: Text.AlignBottom
+                        visible: !model.thing.is_title
                     }
             }
 

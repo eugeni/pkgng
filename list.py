@@ -78,7 +78,7 @@ class synthesis_parser:
         # let's the fun begin, with popen
         cmd_line='wget -q -O - %s' % f;
         return os.popen(self.uncompress(f,cmd_line))
-                
+
     def open_from_disk(self,f):
         cmd_line=' cat %s ' % f
         return os.popen(self.uncompress(f,cmd_line))
@@ -116,10 +116,11 @@ class synthesis_parser:
             line=f.readline()
 
 class ThingWrapper(QtCore.QObject):
-    def __init__(self, name, description):
+    def __init__(self, name, description, is_title=False):
         QtCore.QObject.__init__(self)
         self._name = name
         self._description = description
+        self._is_title = is_title
 
     def _name(self):
         return self._name
@@ -127,11 +128,15 @@ class ThingWrapper(QtCore.QObject):
     def _description(self):
         return self._description
 
+    def _is_title(self):
+        return self._is_title
+
 
     changed = QtCore.Signal()
 
     name = QtCore.Property(unicode, _name, notify=changed)
     description = QtCore.Property(unicode, _description, notify=changed)
+    is_title = QtCore.Property(bool, _is_title, notify=changed)
 
 class ThingListModel(QtCore.QAbstractListModel):
     COLUMNS = ('thing',)
@@ -187,7 +192,7 @@ if __name__ == "__main__":
     things = []
     pkgs = list(si, sys.argv[1])
     for cat in pkgs:
-        things.append(ThingWrapper(cat, "Packages of category %s" % cat))
+        things.append(ThingWrapper(cat, "Packages of category %s" % cat, is_title=True))
         for pkg, descr in pkgs[cat]:
             things.append(ThingWrapper(pkg, descr))
 
