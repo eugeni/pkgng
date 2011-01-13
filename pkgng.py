@@ -201,7 +201,6 @@ def listpkgs(si, pattern):
 if __name__ == "__main__":
     si=Repo()
     si.find_medias()
-    sys.exit(0)
     # TODO: print information while parsing
     si.add_hdlistpkgs('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
 
