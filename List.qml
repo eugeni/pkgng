@@ -2,8 +2,7 @@ import Qt 4.7
 
 ListView {
     id: pythonList
-    width: 640
-    height: 440
+    anchors.fill: parent
 
     model: pythonListModel
 

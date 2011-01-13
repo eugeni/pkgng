@@ -15,8 +15,6 @@ Rectangle {
 
     List {
         id: list
-        width: 640
-        height: 400
-        anchors.bottom: searchBox.bottom
+        anchors.topMargin: 40
     }
 }
