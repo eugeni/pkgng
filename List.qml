@@ -10,6 +10,7 @@ ListView {
         Rectangle {
             width: pythonList.width
             height: 40
+            id: listItem
             color: (model.thing.is_title)?"#4867b5":"#fff"
 
             Item {
@@ -55,7 +56,10 @@ ListView {
 
             MouseArea {
                 anchors.fill: parent
+                hoverEnabled: true
                 onClicked: { controller.thingSelected(model.thing) }
+                onEntered: { listItem.color = (model.thing.is_title)?"#4565b3":"#ddd" }
+                onExited: { listItem.color = (model.thing.is_title)?"#4767b5":"#fff" }
             }
         }
     }
