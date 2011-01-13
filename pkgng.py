@@ -12,6 +12,8 @@ from PySide import QtCore
 from PySide import QtGui
 from PySide import QtDeclarative
 
+DEBUG_WITH_CACHED_SEARCH=False
+
 class synthesis_parser:
     """class to parse a synthesis hdlist"""
     _list={}
@@ -98,7 +100,7 @@ class synthesis_parser:
             l=line.split('@')[1:]
             if l[0] == 'summary':
                 tmp['summary']=l[1]
-            for i in ('requires','provides','conflict','obsoletes'):
+            for i in ('requires','provides','conflict','obsoletes','suggests'):
                 if l[0] == i:
                         tmp[i]=self.split_requires(l[1:])
             if l[0] == 'info':
@@ -177,19 +179,20 @@ if __name__ == "__main__":
         print "Usage: %s <pattern>" % sys.argv[0]
         sys.exit(1)
     # initialize synthesis
-    cached=False
 
     # speedup stuff
-    if os.access("list.dump", os.R_OK):
-        print 'cached'
-        cached=True
-        fd = open("list.dump", "r")
-        si = pickle.load(fd)
-        si._list = pickle.load(fd)
-        fd.close()
+    if DEBUG_WITH_CACHED_SEARCH:
+        if os.access("list.dump", os.R_OK):
+            print 'cached'
+            cached=True
+            fd = open("list.dump", "r")
+            si = pickle.load(fd)
+            si._list = pickle.load(fd)
+            fd.close()
     else:
-        si=synthesis_parser()
-        si.add_hdlist('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
+        cached=False
+    si=synthesis_parser()
+    si.add_hdlist('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
