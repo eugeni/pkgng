@@ -162,6 +162,10 @@ class Controller(QtCore.QObject):
     def thingSelected(self, wrapper):
         print 'User clicked on:', wrapper._name
 
+    @QtCore.Slot(QtCore.QObject)
+    def textEntered(self, wrapper):
+        value = wrapper.property('text')
+
 def list(si, pattern):
     packages = {}
     for item in si._list:
