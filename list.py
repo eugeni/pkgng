@@ -226,7 +226,7 @@ if __name__ == "__main__":
     rc.setContextProperty('controller', controller)
     rc.setContextProperty('pythonListModel', thingList)
 
-    view.setSource('list.qml')
+    view.setSource('pkgng.qml')
 
     m.setCentralWidget(view)
 
