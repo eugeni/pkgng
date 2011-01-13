@@ -158,6 +158,11 @@ class ThingListModel(QtCore.QAbstractListModel):
         return None
 
 class Controller(QtCore.QObject):
+    def __init__(self, rc, si):
+        QtCore.QObject.__init__(self)
+        self.rc = rc
+        self.si = si
+
     @QtCore.Slot(QtCore.QObject)
     def thingSelected(self, wrapper):
         print 'User clicked on:', wrapper._name
@@ -165,6 +170,19 @@ class Controller(QtCore.QObject):
     @QtCore.Slot(QtCore.QObject)
     def textEntered(self, wrapper):
         value = wrapper.property('text')
+        self.search(value)
+
+    def search(self, pattern):
+        things = []
+        pkgs = list(self.si, pattern)
+        for cat in pkgs:
+            things.append(ThingWrapper(cat, "Packages of category %s" % cat, is_title=True))
+            for pkg, descr in pkgs[cat]:
+                things.append(ThingWrapper(pkg, descr))
+        fd.close()
+
+        thingList = ThingListModel(things)
+        rc.setContextProperty('pythonListModel', thingList)
 
 def list(si, pattern):
     packages = {}
@@ -225,10 +243,10 @@ if __name__ == "__main__":
         pickle.dump(ll, fd)
     fd.close()
 
-    controller = Controller()
-    thingList = ThingListModel(things)
-
     rc = view.rootContext()
+
+    controller = Controller(rc, si)
+    thingList = ThingListModel(things)
 
     rc.setContextProperty('controller', controller)
     rc.setContextProperty('pythonListModel', thingList)
