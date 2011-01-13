@@ -1,14 +1,14 @@
 import Qt 4.7
 
 ListView {
-    id: pythonList
+    id: listPackages
     anchors.fill: parent
 
-    model: pythonListModel
+    model: listPackagesModel
 
     delegate: Component {
         Rectangle {
-            width: pythonList.width
+            width: listPackages.width
             height: 40
             id: listItem
             color: (model.thing.is_title)?"#4867b5":"#fff"

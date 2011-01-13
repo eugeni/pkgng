@@ -6,7 +6,7 @@
 import os
 import sys
 import re
-import pickle
+import gzip
 
 from PySide import QtCore
 from PySide import QtGui
@@ -20,10 +20,10 @@ class synthesis_parser:
     _path={}
     _operation_re=None
     _requires_re=None
+
     def __init__(self):
         self._requires_re=re.compile('^([^[]*)(?:\[\*\])*(\[.*])?')
         self._operation_re=re.compile('\[([<>=]*) *(.*)\]')
-
 
     def split_requires(self,req_array):
         """split the requires in a dictionary"""
@@ -43,6 +43,7 @@ class synthesis_parser:
                         res[name]['version']=version
                         res[name]['operation']=op
         return res
+
     def get_listpkgs(self):
         """ return the list of rpm parsed from the synthesis """
         return self._list
@@ -53,39 +54,10 @@ class synthesis_parser:
         res= os.path.dirname(self._path[r['source']]['path'])+'/'
         res=res + self._path[r['source']]['rpm']+'/'
         return res+'/'+'%s-%s-%s.%s.rpm' % (rpm,r['version'],r['release'],r['arch'])
-    
+
     def open_listing(self,f):
-        """ open a synthetis, by taking the url as argument. support ftp:// and http://, and simple file."""    
-        # TODO and https ?
-        if f.startswith('http://'):
-                r=self.open_from_http(f)
-        elif f.startswith('ftp://'):
-                r=self.open_from_ftp(f)
-        else:
-                r=self.open_from_disk(f)
-        return r
-
-    def open_from_ftp(self,f):
-        return self.open_from_http(f)
-        
-    #TODO used native python library, once urllib will be usable with gzip
-    # use file detection
-    def uncompress(self,f,cmd_line):
-        """ open a compressed file """
-        return cmd_line + ' | zcat '
-
-
-
-    def open_from_http(self,f):
-        """ read a file from http """
-        # let's the fun begin, with popen
-        cmd_line='wget -q -O - %s' % f;
-        return os.popen(self.uncompress(f,cmd_line))
-
-    def open_from_disk(self,f):
-        cmd_line=' cat %s ' % f
-        return os.popen(self.uncompress(f,cmd_line))
-
+        """ open a local file synthesis """
+        return gzip.open(f, "r")
 
     def add_hdlistpkgs(self,name_source,path,path_to_rpm='.'):
         """ add the synthesis.hdlist to the list """
@@ -181,7 +153,7 @@ class Controller(QtCore.QObject):
                 things.append(ThingWrapper(pkg, descr))
 
         thingList = ThingListModel(things)
-        rc.setContextProperty('pythonListModel', thingList)
+        rc.setContextProperty('listPackagesModel', thingList)
 
 def listpkgs(si, pattern):
     packages = {}
@@ -197,7 +169,9 @@ def listpkgs(si, pattern):
 
 if __name__ == "__main__":
     si=synthesis_parser()
+    # TODO: print information while parsing
     si.add_hdlistpkgs('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
+
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
@@ -219,7 +193,7 @@ if __name__ == "__main__":
     thingList = ThingListModel(things)
 
     rc.setContextProperty('controller', controller)
-    rc.setContextProperty('pythonListModel', thingList)
+    rc.setContextProperty('listPackagesModel', thingList)
 
     view.setSource('pkgng.qml')
 
