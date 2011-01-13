@@ -35,7 +35,7 @@ class Repo:
         ignore_r = re.compile('.*(ignore).*')
         update_r = re.compile('.*(update).*')
         key_r = re.compile('.*key-ids:\s* (.*).*')
-        url_r = re.compile('(.*) (.*://.*|/.*)')
+        url_r = re.compile('(.*) (.*://.*|/.*$)')
         with open(self._urpmi_cfg, "r") as fd:
             data = fd.read()
             res = media_r.findall(data)
