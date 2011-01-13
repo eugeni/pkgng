@@ -6,6 +6,7 @@
 import os
 import sys
 import re
+import pickle
 
 from PySide import QtCore
 from PySide import QtGui
@@ -176,8 +177,19 @@ if __name__ == "__main__":
         print "Usage: %s <pattern>" % sys.argv[0]
         sys.exit(1)
     # initialize synthesis
-    si=synthesis_parser()
-    si.add_hdlist('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
+    cached=False
+
+    # speedup stuff
+    if os.access("list.dump", os.R_OK):
+        print 'cached'
+        cached=True
+        fd = open("list.dump", "r")
+        si = pickle.load(fd)
+        si._list = pickle.load(fd)
+        fd.close()
+    else:
+        si=synthesis_parser()
+        si.add_hdlist('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
@@ -191,10 +203,20 @@ if __name__ == "__main__":
 
     things = []
     pkgs = list(si, sys.argv[1])
+    if not cached:
+        fd = open("list.dump", "w")
+        pickle.dump(si, fd)
+        ll = {}
     for cat in pkgs:
         things.append(ThingWrapper(cat, "Packages of category %s" % cat, is_title=True))
         for pkg, descr in pkgs[cat]:
             things.append(ThingWrapper(pkg, descr))
+            if not cached:
+                ll[pkg] = si._list[pkg]
+    if not cached:
+        # lets save a short list
+        pickle.dump(ll, fd)
+    fd.close()
 
     controller = Controller()
     thingList = ThingListModel(things)
