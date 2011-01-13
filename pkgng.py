@@ -43,7 +43,7 @@ class synthesis_parser:
                         res[name]['version']=version
                         res[name]['operation']=op
         return res
-    def get_list(self):
+    def get_listpkgs(self):
         """ return the list of rpm parsed from the synthesis """
         return self._list
 
@@ -87,7 +87,7 @@ class synthesis_parser:
         return os.popen(self.uncompress(f,cmd_line))
 
 
-    def add_hdlist(self,name_source,path,path_to_rpm='.'):
+    def add_hdlistpkgs(self,name_source,path,path_to_rpm='.'):
         """ add the synthesis.hdlist to the list """
         self._path[name_source]={}
         self._path[name_source]['path']=path
@@ -174,17 +174,16 @@ class Controller(QtCore.QObject):
 
     def search(self, pattern):
         things = []
-        pkgs = list(self.si, pattern)
+        pkgs = listpkgs(self.si, pattern)
         for cat in pkgs:
             things.append(ThingWrapper(cat, "Packages of category %s" % cat, is_title=True))
             for pkg, descr in pkgs[cat]:
                 things.append(ThingWrapper(pkg, descr))
-        fd.close()
 
         thingList = ThingListModel(things)
         rc.setContextProperty('pythonListModel', thingList)
 
-def list(si, pattern):
+def listpkgs(si, pattern):
     packages = {}
     for item in si._list:
         if item.find(pattern) >= 0:
@@ -197,24 +196,8 @@ def list(si, pattern):
     return packages
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print "Usage: %s <pattern>" % sys.argv[0]
-        sys.exit(1)
-    # initialize synthesis
-
-    # speedup stuff
-    if DEBUG_WITH_CACHED_SEARCH:
-        if os.access("list.dump", os.R_OK):
-            print 'cached'
-            cached=True
-            fd = open("list.dump", "r")
-            si = pickle.load(fd)
-            si._list = pickle.load(fd)
-            fd.close()
-    else:
-        cached=False
     si=synthesis_parser()
-    si.add_hdlist('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
+    si.add_hdlistpkgs('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
@@ -227,21 +210,8 @@ if __name__ == "__main__":
     view.setResizeMode(QtDeclarative.QDeclarativeView.SizeRootObjectToView)
 
     things = []
-    pkgs = list(si, sys.argv[1])
-    if not cached:
-        fd = open("list.dump", "w")
-        pickle.dump(si, fd)
-        ll = {}
-    for cat in pkgs:
-        things.append(ThingWrapper(cat, "Packages of category %s" % cat, is_title=True))
-        for pkg, descr in pkgs[cat]:
-            things.append(ThingWrapper(pkg, descr))
-            if not cached:
-                ll[pkg] = si._list[pkg]
-    if not cached:
-        # lets save a short list
-        pickle.dump(ll, fd)
-    fd.close()
+    things.append(ThingWrapper("Package search", "", is_title=True))
+    things.append(ThingWrapper("Type something to start searching", "The search will be performed according to package names"))
 
     rc = view.rootContext()
 
