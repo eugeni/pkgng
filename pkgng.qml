@@ -16,14 +16,15 @@ Rectangle {
             color: "black"
             text: "Get packages"
             verticalAlignment: Text.AlignTop
+            anchors.fill: parent
         }
     }
 
     Rectangle {
         id: content
-        width: 540
-        height: 480
         anchors.left: menu.right
+        anchors.right: page.right
+        height: page.height
 
         SearchBox {
             id: searchBox
@@ -33,7 +34,7 @@ Rectangle {
             anchors.fill: parent
         }
 
-        List {
+        ListPackages {
             id: list
             anchors.topMargin: 40
         }
