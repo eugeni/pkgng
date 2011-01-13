@@ -20,7 +20,7 @@ FocusScope {
             focus: true
             selectByMouse: true
             anchors.leftMargin: 9
-            Keys.onReleased: controller.textEntered(textInput)
+            Keys.onReleased: controller.searchPkgs(textInput)
         }
 
         states: State {

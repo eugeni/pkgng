@@ -14,8 +14,10 @@ from PySide import QtDeclarative
 
 DEBUG_WITH_CACHED_SEARCH=False
 
-class synthesis_parser:
+class Repo:
     """class to parse a synthesis hdlist"""
+    _urpmi_cfg = "/etc/urpmi/urpmi.cfg"
+    _media_synthesis = "/var/urpmi/%s/synthesis.hdlist.cz"
     _list={}
     _path={}
     _operation_re=None
@@ -24,6 +26,35 @@ class synthesis_parser:
     def __init__(self):
         self._requires_re=re.compile('^([^[]*)(?:\[\*\])*(\[.*])?')
         self._operation_re=re.compile('\[([<>=]*) *(.*)\]')
+        self.medias = {}
+
+    def find_medias(self):
+        """Attempts to locate and configure available medias"""
+        medias = {}
+        media_r = re.compile('^(.*) {([\s\S]*?)\s*}', re.MULTILINE)
+        ignore_r = re.compile('.*(ignore).*')
+        update_r = re.compile('.*(update).*')
+        key_r = re.compile('.*key-ids:\s* (.*).*')
+        url_r = re.compile('(.*) (.*://.*)')
+        with open(self._urpmi_cfg, "r") as fd:
+            data = fd.read()
+            res = media_r.findall(data)
+            for media, values in res:
+                res2 = url_r.findall(media)
+                if res2:
+                    # found a media with url, fixing
+                    name, url = res2[0]
+                    media = name.replace('\\', '')
+                key = ""
+                keys = key_r.findall(values)
+                if keys:
+                    key = keys[0]
+                if ignore_r.search(values):
+                    print "%s -- ignored (%s)" % (media, key)
+                elif update_r.search(values):
+                    print "%s -- update (%s)" % (media, key)
+                else:
+                    print "%s -- MEDIA (%s)" % (media, key)
 
     def split_requires(self,req_array):
         """split the requires in a dictionary"""
@@ -106,7 +137,6 @@ class ThingWrapper(QtCore.QObject):
     def _is_title(self):
         return self._is_title
 
-
     changed = QtCore.Signal()
 
     name = QtCore.Property(unicode, _name, notify=changed)
@@ -140,11 +170,12 @@ class Controller(QtCore.QObject):
         print 'User clicked on:', wrapper._name
 
     @QtCore.Slot(QtCore.QObject)
-    def textEntered(self, wrapper):
-        value = wrapper.property('text')
-        self.search(value)
+    def searchPkgs(self, textInput):
+        value = textInput.property('text')
+        self.search(value, 'listPackagesModel')
 
-    def search(self, pattern):
+    def search(self, pattern, searchList):
+        print searchList
         things = []
         pkgs = listpkgs(self.si, pattern)
         for cat in pkgs:
@@ -153,7 +184,7 @@ class Controller(QtCore.QObject):
                 things.append(ThingWrapper(pkg, descr))
 
         thingList = ThingListModel(things)
-        rc.setContextProperty('listPackagesModel', thingList)
+        self.rc.setContextProperty(searchList, thingList)
 
 def listpkgs(si, pattern):
     packages = {}
@@ -168,10 +199,11 @@ def listpkgs(si, pattern):
     return packages
 
 if __name__ == "__main__":
-    si=synthesis_parser()
+    si=Repo()
+    si.find_medias()
+    sys.exit(0)
     # TODO: print information while parsing
     si.add_hdlistpkgs('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
-
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
