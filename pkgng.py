@@ -7,6 +7,7 @@ import os
 import sys
 import re
 import gzip
+from collections import OrderedDict
 
 from PySide import QtCore
 from PySide import QtGui
@@ -30,7 +31,7 @@ class Repo:
 
     def find_medias(self):
         """Attempts to locate and configure available medias"""
-        medias = {}
+        medias = OrderedDict()
         media_r = re.compile('^(.*) {([\s\S]*?)\s*}', re.MULTILINE)
         ignore_r = re.compile('.*(ignore).*')
         update_r = re.compile('.*(update).*')
@@ -46,15 +47,17 @@ class Repo:
                     name, url = res2[0]
                     media = name.replace('\\', '')
                 key = ""
+                ignore=False
+                update=False
                 keys = key_r.findall(values)
                 if keys:
                     key = keys[0]
                 if ignore_r.search(values):
-                    print "%s -- ignored (%s)" % (media, key)
-                elif update_r.search(values):
-                    print "%s -- update (%s)" % (media, key)
-                else:
-                    print "%s -- MEDIA (%s)" % (media, key)
+                    ignore=True
+                if update_r.search(values):
+                    update=True
+                medias[media] = (key, ignore, update)
+        return medias
 
     def split_requires(self,req_array):
         """split the requires in a dictionary"""
@@ -200,7 +203,7 @@ def listpkgs(si, pattern):
 
 if __name__ == "__main__":
     si=Repo()
-    si.find_medias()
+    medias = si.find_medias()
     # TODO: print information while parsing
     si.add_hdlistpkgs('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
 
