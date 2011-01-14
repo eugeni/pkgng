@@ -14,8 +14,6 @@ from PySide import QtCore
 from PySide import QtGui
 from PySide import QtDeclarative
 
-DEBUG_WITH_CACHED_SEARCH=False
-
 class Thread(threading.Thread):
     def __init__(self, f, *args, **kwargs):
         threading.Thread.__init__(self)
@@ -244,7 +242,6 @@ def listpkgs(si, pattern):
 def load_medias(si, progress, finished):
     """Loads medias in a separate thread, call @progress func to show progress and @finished when done"""
     medias = si.find_medias()
-    # TODO: print information while parsing
     for media in medias:
         key, ignore, update = medias[media]
 
