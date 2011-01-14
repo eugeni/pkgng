@@ -1,4 +1,4 @@
-PACKAGE = pkgkg
+PACKAGE = pkgng
 VERSION = 0.01
 GITPATH = git://github.com:eugeni/pkgng.git
 
