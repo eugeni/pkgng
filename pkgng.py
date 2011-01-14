@@ -18,7 +18,7 @@ DEBUG_WITH_CACHED_SEARCH=False
 class Repo:
     """class to parse a synthesis hdlist"""
     _urpmi_cfg = "/etc/urpmi/urpmi.cfg"
-    _media_synthesis = "/var/urpmi/%s/synthesis.hdlist.cz"
+    _media_synthesis = "/var/lib/urpmi/%s/synthesis.hdlist.cz"
     _list={}
     _path={}
     _operation_re=None
@@ -45,7 +45,9 @@ class Repo:
                 if res2:
                     # found a media with url, fixing
                     name, url = res2[0]
-                    media = name.replace('\\', '')
+                    media = name
+                media = media.replace('\\', '')
+                media = media.strip()
                 key = ""
                 ignore=False
                 update=False
@@ -58,6 +60,10 @@ class Repo:
                     update=True
                 medias[media] = (key, ignore, update)
         return medias
+
+    def media_synthesis(self, media):
+        """Returns media synthesis address"""
+        return self._media_synthesis % media
 
     def split_requires(self,req_array):
         """split the requires in a dictionary"""
@@ -205,7 +211,15 @@ if __name__ == "__main__":
     si=Repo()
     medias = si.find_medias()
     # TODO: print information while parsing
-    si.add_hdlistpkgs('main','/var/lib/urpmi/Main/synthesis.hdlist.cz','../RPMS/')
+    for media in medias:
+        key, ignore, update = medias[media]
+        if ignore:
+            print "Media %s ignored" % media
+            continue
+        if not key:
+            print "Media %s does not has a key!" % media
+        print "Loading repository info for %s media.." % media
+        si.add_hdlistpkgs(media, si.media_synthesis(media), '')
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
