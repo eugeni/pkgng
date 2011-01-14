@@ -15,7 +15,7 @@ install: all
 	install -d $(RPM_BUILD_ROOT)/usr/bin
 	install -m755 pkgng.py $(RPM_BUILD_ROOT)/usr/share/pkgng
 	install -m644 *.qml $(RPM_BUILD_ROOT)/usr/share/pkgng
-	ln -s /usr/share/pkgng/pkgng.py /usr/bin/pkgng
+	ln -s /usr/share/pkgng/pkgng.py $(RPM_BUILD_ROOT)/usr/bin/pkgng
 
 cleandist:
 	rm -rf $(PACKAGE)-$(VERSION) $(PACKAGE)-$(VERSION).tar.bz2
