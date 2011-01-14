@@ -143,7 +143,7 @@ class Repo:
                 tmp={}
             line=f.readline()
 
-class ThingWrapper(QtCore.QObject):
+class ItemWrapper(QtCore.QObject):
     def __init__(self, name, description, is_title=False):
         QtCore.QObject.__init__(self)
         self._name = name
@@ -165,20 +165,36 @@ class ThingWrapper(QtCore.QObject):
     description = QtCore.Property(unicode, _description, notify=changed)
     is_title = QtCore.Property(bool, _is_title, notify=changed)
 
-class ThingListModel(QtCore.QAbstractListModel):
-    COLUMNS = ('thing',)
+class PackageListModel(QtCore.QAbstractListModel):
+    COLUMNS = ('package',)
 
-    def __init__(self, things):
+    def __init__(self, packages):
         QtCore.QAbstractListModel.__init__(self)
-        self._things = things
-        self.setRoleNames(dict(enumerate(ThingListModel.COLUMNS)))
+        self._packages = packages
+        self.setRoleNames(dict(enumerate(PackageListModel.COLUMNS)))
 
     def rowCount(self, parent=QtCore.QModelIndex()):
-        return len(self._things)
+        return len(self._packages)
 
     def data(self, index, role):
-        if index.isValid() and role == ThingListModel.COLUMNS.index('thing'):
-            return self._things[index.row()]
+        if index.isValid() and role == PackageListModel.COLUMNS.index('package'):
+            return self._packages[index.row()]
+        return None
+
+class CategoriesListModel(QtCore.QAbstractListModel):
+    COLUMNS = ('category',)
+
+    def __init__(self, categories):
+        QtCore.QAbstractListModel.__init__(self)
+        self._categories = categories
+        self.setRoleNames(dict(enumerate(CategoriesListModel.COLUMNS)))
+
+    def rowCount(self, parent=QtCore.QModelIndex()):
+        return len(self._categories)
+
+    def data(self, index, role):
+        if index.isValid() and role == CategoriesListModel.COLUMNS.index('category'):
+            return self._categories[index.row()]
         return None
 
 class Controller(QtCore.QObject):
@@ -188,13 +204,21 @@ class Controller(QtCore.QObject):
         self.si = si
 
     @QtCore.Slot(QtCore.QObject)
-    def thingSelected(self, wrapper):
+    def packageSelected(self, wrapper):
         print 'User clicked on:', wrapper._name
+
+    @QtCore.Slot(QtCore.QObject)
+    def categorySelected(self, wrapper):
+        print 'User clicked on category:', wrapper._name
 
     @QtCore.Slot(QtCore.QObject)
     def searchPkgs(self, textInput):
         value = textInput.property('text')
-        self.search(value, 'listPackagesModel')
+        categories, packages = self.search(value)
+        packageList = PackageListModel(packages)
+        categoriesList = CategoriesListModel(categories)
+        self.rc.setContextProperty('listPackagesModel', packageList)
+        self.rc.setContextProperty('listCategoriesModel', categoriesList)
 
     @QtCore.Slot(QtCore.QObject)
     def loadMedias(self, root):
@@ -213,17 +237,17 @@ class Controller(QtCore.QObject):
         """Medias are loading, show progress"""
         self.loadScreenData['loadScreenProgress'].setProperty("text", text)
 
-    def search(self, pattern, searchList):
-        print searchList
-        things = []
+    def search(self, pattern):
+        categories = []
+        packages = []
         pkgs = listpkgs(self.si, pattern)
         for cat in pkgs:
-            things.append(ThingWrapper(cat, "Packages of category %s" % cat, is_title=True))
+            categories.append(ItemWrapper(cat,""))
+            packages.append(ItemWrapper(cat, "Packages of category %s" % cat, is_title=True))
             for pkg, descr in pkgs[cat]:
-                things.append(ThingWrapper(pkg, descr))
+                packages.append(ItemWrapper(pkg, descr))
 
-        thingList = ThingListModel(things)
-        self.rc.setContextProperty(searchList, thingList)
+        return categories, packages
 
 def listpkgs(si, pattern):
     """Lists packages according to a pattern"""
@@ -242,8 +266,12 @@ def listpkgs(si, pattern):
 def load_medias(si, progress, finished):
     """Loads medias in a separate thread, call @progress func to show progress and @finished when done"""
     medias = si.find_medias()
+    count = 0
     for media in medias:
         key, ignore, update = medias[media]
+        if count > 3:
+            break
+        count += 1
 
         if ignore:
             print "Media %s ignored" % media
@@ -272,17 +300,23 @@ if __name__ == "__main__":
     view.setViewport(glw)
     view.setResizeMode(QtDeclarative.QDeclarativeView.SizeRootObjectToView)
 
-    things = []
-    things.append(ThingWrapper("Package search", "", is_title=True))
-    things.append(ThingWrapper("Type something to start searching", "The search will be performed according to package names"))
+    packages = []
+    packages.append(ItemWrapper("Package search", "", is_title=True))
+    packages.append(ItemWrapper("Type somepackage to start searching", "The search will be performed according to package names"))
+
+    medias = []
+    medias.append(ItemWrapper("Main", "Main media"))
+    medias.append(ItemWrapper("Contrib", "Contrib media"))
 
     rc = view.rootContext()
 
     controller = Controller(rc, si)
-    thingList = ThingListModel(things)
+    packageList = PackageListModel(packages)
+    mediasList = CategoriesListModel(medias)
 
     rc.setContextProperty('controller', controller)
-    rc.setContextProperty('listPackagesModel', thingList)
+    rc.setContextProperty('listPackagesModel', packageList)
+    rc.setContextProperty('listCategoriesModel', mediasList)
 
     view.setSource('pkgng.qml')
 

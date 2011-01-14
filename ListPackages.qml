@@ -11,18 +11,18 @@ ListView {
             width: listPackages.width
             height: 40
             id: listItem
-            color: (model.thing.is_title)?"#4867b5":"#fff"
+            color: (model.package.is_title)?"#4867b5":"#fff"
 
             Item {
                 width: 400; height: 40
                 anchors.centerIn: parent
-                visible: model.thing.is_title
+                visible: model.package.is_title
 
                     Text {
                         anchors.centerIn: parent
                         id: category
                         font.weight: Font.Bold
-                        text: model.thing.name
+                        text: model.package.name
                         color: "white"
                         verticalAlignment: Text.AlignBottom
                     }
@@ -30,12 +30,12 @@ ListView {
 
             Item {
                 width: 400; height: 40
-                visible: !model.thing.is_title
+                visible: !model.package.is_title
 
                     Text {
                         id: title
                         elide: Text.ElideRight
-                        text: model.thing.name
+                        text: model.package.name
                         color: "black"
                         font.bold: true
                         anchors.leftMargin: 10
@@ -45,7 +45,7 @@ ListView {
                     Text {
                         id: subtitle
                         elide: Text.ElideRight
-                        text: model.thing.description
+                        text: model.package.description
                         color: "red"
                         anchors.leftMargin: 10
                         anchors.topMargin: 25
@@ -57,9 +57,9 @@ ListView {
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: { controller.thingSelected(model.thing) }
-                onEntered: { listItem.color = (model.thing.is_title)?"#4565b3":"#ddd" }
-                onExited: { listItem.color = (model.thing.is_title)?"#4767b5":"#fff" }
+                onClicked: { controller.packageSelected(model.package) }
+                onEntered: { listItem.color = (model.package.is_title)?"#4565b3":"#ddd" }
+                onExited: { listItem.color = (model.package.is_title)?"#4767b5":"#fff" }
             }
         }
     }

@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import Qt 4.7
 
 Rectangle {
     id: page
@@ -27,41 +27,39 @@ Rectangle {
     Rectangle {
         id: searchView
         visible: false
+        width: 640
+        height: 480
         anchors.fill: parent
 
+        SearchBox {
+            id: searchBox
+            focus: true
+            width: 540
+            height: 40
+            anchors.top: searchView.top
+        }
 
         Rectangle {
-            id: menu
-            width: 100
-            height: 480
-
-            Text {
-                id: getPackages
-                font.weight: Font.Bold
-                color: "black"
-                text: "Get packages"
-                verticalAlignment: Text.AlignTop
+            id: listPackagesRect
+            anchors.top: searchBox.bottom
+            width: searchView.width - listCategoriesRect.width
+            height: searchView.height - searchBox.height
+            x: 0
+            ListPackages {
+                id: listPackages
                 anchors.fill: parent
             }
         }
 
         Rectangle {
-            id: content
-            anchors.left: menu.right
-            anchors.right: searchView.right
-            height: searchView.height
-
-            SearchBox {
-                id: searchBox
-                focus: true
-                width: 540
-                height: 40
+            id: listCategoriesRect
+            width: 200
+            height: searchView.height - searchBox.height
+            anchors.left: listPackagesRect.right
+            anchors.top: searchBox.bottom
+            ListCategories {
+                id: listCategories
                 anchors.fill: parent
-            }
-
-            ListPackages {
-                id: list
-                anchors.topMargin: 40
             }
         }
     }
