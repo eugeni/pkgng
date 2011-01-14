@@ -8,12 +8,27 @@ import sys
 import re
 import gzip
 from collections import OrderedDict
+import threading
 
 from PySide import QtCore
 from PySide import QtGui
 from PySide import QtDeclarative
 
 DEBUG_WITH_CACHED_SEARCH=False
+
+class Thread(threading.Thread):
+    def __init__(self, f, *args, **kwargs):
+        threading.Thread.__init__(self)
+        print "configuring thread.."
+        self.func = f
+
+    def run(self):
+        self.func(*self.args, **self.kwargs)
+
+    def __call__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        return self.start()
 
 class Repo:
     """class to parse a synthesis hdlist"""
@@ -183,6 +198,22 @@ class Controller(QtCore.QObject):
         value = textInput.property('text')
         self.search(value, 'listPackagesModel')
 
+    @QtCore.Slot(QtCore.QObject)
+    def loadMedias(self, root):
+        """Loads medias in background"""
+        self.loadScreenData = root.property('loadScreenData')
+        load_medias(self.si, self.progress, self.finished)
+
+    def finished(self):
+        """Medias finished loading"""
+        print "finished"
+        self.loadScreenData['loadScreen'].setProperty("visible", False)
+        self.loadScreenData['loadScreenNext'].setProperty("visible", True)
+
+    def progress(self, text):
+        """Medias are loading, show progress"""
+        self.loadScreenData['loadScreenProgress'].setProperty("text", text)
+
     def search(self, pattern, searchList):
         print searchList
         things = []
@@ -196,6 +227,7 @@ class Controller(QtCore.QObject):
         self.rc.setContextProperty(searchList, thingList)
 
 def listpkgs(si, pattern):
+    """Lists packages according to a pattern"""
     packages = {}
     for item in si._list:
         if item.find(pattern) >= 0:
@@ -207,8 +239,9 @@ def listpkgs(si, pattern):
 
     return packages
 
-if __name__ == "__main__":
-    si=Repo()
+@Thread
+def load_medias(si, progress, finished):
+    """Loads medias in a separate thread, call @progress func to show progress and @finished when done"""
     medias = si.find_medias()
     # TODO: print information while parsing
     for media in medias:
@@ -218,8 +251,17 @@ if __name__ == "__main__":
             continue
         if not key:
             print "Media %s does not has a key!" % media
-        print "Loading repository info for %s media.." % media
+        progress("Loading repository info for %s media.." % media)
+        if not os.access(si.media_synthesis(media), os.R_OK):
+            print "Unable to access synthesis of %s, ignoring"
+            ignore = True
+            medias[media] = (key, ignore, update)
+            continue
         si.add_hdlistpkgs(media, si.media_synthesis(media), '')
+    finished()
+
+if __name__ == "__main__":
+    si=Repo()
 
     # initialize gui
     app = QtGui.QApplication(sys.argv)
