@@ -209,7 +209,20 @@ class Controller(QtCore.QObject):
 
     @QtCore.Slot(QtCore.QObject)
     def categorySelected(self, wrapper):
-        print 'User clicked on category:', wrapper._name
+        cat = wrapper._name
+        if cat == "":
+            # special case, list all packages
+            print "Listing all packages"
+        else:
+            print "Listing packages in category <%s>" % cat
+        textInput = self.searchScreenData['textInput']
+        value = textInput.property('text')
+        # search according to categories
+        categories, packages = self.search(value, cat)
+        packageList = PackageListModel(packages)
+        categoriesList = CategoriesListModel(categories)
+        self.rc.setContextProperty('listPackagesModel', packageList)
+        self.rc.setContextProperty('listCategoriesModel', categoriesList)
 
     @QtCore.Slot(QtCore.QObject)
     def searchPkgs(self, textInput):
@@ -221,9 +234,10 @@ class Controller(QtCore.QObject):
         self.rc.setContextProperty('listCategoriesModel', categoriesList)
 
     @QtCore.Slot(QtCore.QObject)
-    def loadMedias(self, root):
-        """Loads medias in background"""
+    def init(self, root):
+        """Initializes GUI, loads medias in background"""
         self.loadScreenData = root.property('loadScreenData')
+        self.searchScreenData = root.property('searchScreenData')
         load_medias(self.si, self.progress, self.finished)
 
     def finished(self):
@@ -237,15 +251,21 @@ class Controller(QtCore.QObject):
         """Medias are loading, show progress"""
         self.loadScreenData['loadScreenProgress'].setProperty("text", text)
 
-    def search(self, pattern):
+    def search(self, pattern, category=""):
         categories = []
         packages = []
         pkgs = listpkgs(self.si, pattern)
-        for cat in pkgs:
-            categories.append(ItemWrapper(cat,""))
-            packages.append(ItemWrapper(cat, "Packages of category %s" % cat, is_title=True))
-            for pkg, descr in pkgs[cat]:
+        if category != "":
+            categories.append(ItemWrapper("", "All packages"))
+            packages.append(ItemWrapper(category, "Packages of category %s" % category, is_title=True))
+            for pkg, descr in pkgs[category]:
                 packages.append(ItemWrapper(pkg, descr))
+        else:
+            for cat in pkgs:
+                categories.append(ItemWrapper(cat, ""))
+                packages.append(ItemWrapper(cat, "Packages of category %s" % cat, is_title=True))
+                for pkg, descr in pkgs[cat]:
+                    packages.append(ItemWrapper(pkg, descr))
 
         return categories, packages
 
@@ -266,12 +286,8 @@ def listpkgs(si, pattern):
 def load_medias(si, progress, finished):
     """Loads medias in a separate thread, call @progress func to show progress and @finished when done"""
     medias = si.find_medias()
-    count = 0
     for media in medias:
         key, ignore, update = medias[media]
-        if count > 3:
-            break
-        count += 1
 
         if ignore:
             print "Media %s ignored" % media

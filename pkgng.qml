@@ -6,6 +6,7 @@ Rectangle {
     height: 480
 
     property variant loadScreenData
+    property variant searchScreenData
 
     Rectangle {
         id: loadScreen
@@ -70,7 +71,10 @@ Rectangle {
             'loadScreen': loadScreen,
             'loadScreenNext': searchView,
         }
-        controller.loadMedias(page)
+        searchScreenData = {
+            'textInput': searchBox.textInput,
+        }
+        controller.init(page)
     }
 
     states: State {

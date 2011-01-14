@@ -2,6 +2,7 @@ import QtQuick 1.0
 
 FocusScope {
     id: searchBox
+    property alias textInput: textInput
 
     Rectangle {
         id: box

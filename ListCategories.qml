@@ -19,7 +19,7 @@ ListView {
                     Text {
                         id: title
                         elide: Text.ElideRight
-                        text: model.category.name
+                        text: (model.category.name != "") ? model.category.name : model.category.description
                         color: "black"
                         font.bold: true
                         anchors.leftMargin: 10
