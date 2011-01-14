@@ -206,9 +206,10 @@ class Controller(QtCore.QObject):
 
     def finished(self):
         """Medias finished loading"""
-        print "finished"
         self.loadScreenData['loadScreen'].setProperty("visible", False)
         self.loadScreenData['loadScreenNext'].setProperty("visible", True)
+        searchView = self.loadScreenData['loadScreenNext']
+        print searchView.property('searchBox')
 
     def progress(self, text):
         """Medias are loading, show progress"""
@@ -246,6 +247,7 @@ def load_medias(si, progress, finished):
     # TODO: print information while parsing
     for media in medias:
         key, ignore, update = medias[media]
+
         if ignore:
             print "Media %s ignored" % media
             continue

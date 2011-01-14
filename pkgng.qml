@@ -74,4 +74,10 @@ Rectangle {
         }
         controller.loadMedias(page)
     }
+
+    states: State {
+        name: "showSearchView"; when: searchView.visible == true
+        PropertyChanges { target: searchBox; focus: true }
+    }
+
 }
