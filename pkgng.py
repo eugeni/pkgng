@@ -9,6 +9,7 @@ import re
 import gzip
 from collections import OrderedDict
 import threading
+import time
 
 from PySide import QtCore
 from PySide import QtGui
@@ -36,6 +37,7 @@ class Repo:
     _path={}
     _operation_re=None
     _requires_re=None
+    _name_installed="Installed"
 
     def __init__(self):
         self._requires_re=re.compile('^([^[]*)(?:\[\*\])*(\[.*])?')
@@ -139,9 +141,33 @@ class Repo:
                 tmp['source']=name_source
                 tmp['release']='.'.join(rpm[-1].split('.')[0:-1])
                 tmp['arch']=rpm[-1].split('.')[-1]
+                tmp['installed']=None
                 self._list[name]=tmp
                 tmp={}
             line=f.readline()
+
+    def add_installed(self):
+        """Adds locally installed packages to the list"""
+        fd = os.popen("rpm -qa --qf '%{name}|%{version}|%{epoch}|%{size}|%{group}|%{release}|%{arch}|%{installtime}|%{summary}\n'", "r")
+        self._path[self._name_installed]={}
+        self._path[self._name_installed]['path']=""
+        self._path[self._name_installed]['rpm']=""
+        for l in fd.readlines():
+            name, version, epoch, size, group, release, arch, installed, summary = l.split("|")
+            installed = time.ctime(int(installed))
+            if name in self._list:
+                self._list[name]['installed'] = installed
+            else:
+                self._list[name] = {'version': version,
+                                'epoch': epoch,
+                                'size': size,
+                                'group': group,
+                                'source': self._name_installed,
+                                'release': release,
+                                'summary': summary,
+                                'arch': arch,
+                                'installed': installed
+                                }
 
 class ItemWrapper(QtCore.QObject):
     def __init__(self, name, description, is_title=False):
@@ -265,7 +291,10 @@ class Controller(QtCore.QObject):
                 categories.append(ItemWrapper(cat, ""))
                 packages.append(ItemWrapper(cat, "Packages of category %s" % cat, is_title=True))
                 for pkg, descr in pkgs[cat]:
-                    packages.append(ItemWrapper(pkg, descr))
+                    if self.si._list[pkg]['installed']:
+                        packages.append(ItemWrapper(pkg, "%s (installed on %s)" % (descr, self.si._list[pkg]['installed'])))
+                    else:
+                        packages.append(ItemWrapper(pkg, "%s (available on media %s)" % (descr, self.si._list[pkg]['source'])))
 
         return categories, packages
 
@@ -301,6 +330,9 @@ def load_medias(si, progress, finished):
             medias[media] = (key, ignore, update)
             continue
         si.add_hdlistpkgs(media, si.media_synthesis(media), '')
+    # local packages
+    progress("Determining locally installed packages..")
+    si.add_installed()
     finished()
 
 if __name__ == "__main__":
