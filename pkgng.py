@@ -1,6 +1,10 @@
 #!/usr/bin/python
 #
-# Lists packages
+# Mandriva Next Generation Package Manager
+#
+# Copyright, (C) Eugeni Dodonov <eugeni@mandriva.com>, 2010, 2011.
+#
+# Distributed according to GPLv2 license
 #
 
 import os
