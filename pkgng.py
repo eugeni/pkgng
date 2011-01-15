@@ -275,7 +275,6 @@ class Controller(QtCore.QObject):
         self.loadScreenData['loadScreen'].setProperty("visible", False)
         self.loadScreenData['loadScreenNext'].setProperty("visible", True)
         searchView = self.loadScreenData['loadScreenNext']
-        print searchView.property('searchBox')
 
     def progress(self, text):
         """Medias are loading, show progress"""
