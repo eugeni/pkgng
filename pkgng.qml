@@ -4,6 +4,7 @@ Rectangle {
     id: page
     width: 640
     height: 480
+    state: "showLoadView"
 
     property variant loadScreenData
     property variant searchScreenData
@@ -12,7 +13,7 @@ Rectangle {
         id: loadScreen
         width: 200
         height: 50
-        visible: true
+        opacity: 1
 
         anchors.centerIn: parent
 
@@ -27,7 +28,7 @@ Rectangle {
 
     Rectangle {
         id: searchView
-        visible: false
+        opacity: 0
         width: 640
         height: 480
         anchors.fill: parent
@@ -77,10 +78,27 @@ Rectangle {
         controller.init(page)
     }
 
-    states: State {
-        name: "showSearchView";
-        PropertyChanges { target: loadScreen; visible: false }
-        PropertyChanges { target: searchView; visible: true }
-        PropertyChanges { target: searchBox; focus: true }
-    }
+    states: [
+        State {
+            name: "showLoadView"
+            PropertyChanges { target: loadScreen; opacity: 1; visible: true }
+            PropertyChanges { target: searchView; opacity: 0; rotation: 180 }
+        },
+        State {
+            name: "showSearchView"
+            PropertyChanges { target: loadScreen; opacity: 0; visible: true; rotation: -180 }
+            PropertyChanges { target: searchView; opacity: 1; visible: true }
+            PropertyChanges { target: searchBox; focus: true }
+        }
+    ]
+
+    transitions: [
+        Transition {
+            PropertyAnimation {
+                target: searchView
+                properties: "scale,opacity,rotate,visible"
+                duration: 1000
+            }
+        }
+    ]
 }
