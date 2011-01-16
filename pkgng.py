@@ -268,7 +268,10 @@ class Controller(QtCore.QObject):
         """Initializes GUI, loads medias in background"""
         self.loadScreenData = root.property('loadScreenData')
         self.searchScreenData = root.property('searchScreenData')
-        load_medias(self.si, self.progress, self.finished)
+        self.medias_loader = MediasLoader(self.si)
+        self.medias_loader.progress.connect(self.progress, QtCore.Qt.QueuedConnection)
+        self.medias_loader.finished.connect(self.finished, QtCore.Qt.QueuedConnection)
+        self.medias_loader.start()
 
     def finished(self):
         """Medias finished loading"""
@@ -313,29 +316,42 @@ def listpkgs(si, pattern):
 
     return packages
 
-@Thread
-def load_medias(si, progress, finished):
-    """Loads medias in a separate thread, call @progress func to show progress and @finished when done"""
-    medias = si.find_medias()
-    for media in medias:
-        key, ignore, update = medias[media]
+class MediasLoader(QtCore.QThread):
+    progress = QtCore.Signal(object)
+    finished = QtCore.Signal()
 
-        if ignore:
-            print "Media %s ignored" % media
-            continue
-        if not key:
-            print "Media %s does not has a key!" % media
-        progress("Loading repository info for %s media.." % media)
-        if not os.access(si.media_synthesis(media), os.R_OK):
-            print "Unable to access synthesis of %s, ignoring"
-            ignore = True
-            medias[media] = (key, ignore, update)
-            continue
-        si.add_hdlistpkgs(media, si.media_synthesis(media), '')
-    # local packages
-    progress("Determining locally installed packages..")
-    si.add_installed()
-    finished()
+    def __init__(self, si):
+        """Initializes the loader with repository object"""
+        QtCore.QThread.__init__(self)
+        self.exiting = False
+        self.si = si
+
+    def __del__(self):
+        self.exiting = True
+
+    def run(self):
+        """Loads medias in a separate thread, call @progress func to show progress and @finished when done"""
+        self.medias = si.find_medias()
+        medias = self.medias
+        for media in medias:
+            key, ignore, update = medias[media]
+
+            if ignore:
+                print "Media %s ignored" % media
+                continue
+            if not key:
+                print "Media %s does not has a key!" % media
+            self.progress.emit(("Loading repository info for %s media.." % media))
+            if not os.access(si.media_synthesis(media), os.R_OK):
+                print "Unable to access synthesis of %s, ignoring"
+                ignore = True
+                medias[media] = (key, ignore, update)
+                continue
+            si.add_hdlistpkgs(media, si.media_synthesis(media), '')
+        # local packages
+        self.progress.emit(("Determining locally installed packages.."))
+        si.add_installed()
+        self.finished.emit()
 
 if __name__ == "__main__":
     si=Repo()
