@@ -78,8 +78,9 @@ Rectangle {
     }
 
     states: State {
-        name: "showSearchView"; when: searchView.visible == true
+        name: "showSearchView";
+        PropertyChanges { target: loadScreen; visible: false }
+        PropertyChanges { target: searchView; visible: true }
         PropertyChanges { target: searchBox; focus: true }
     }
-
 }

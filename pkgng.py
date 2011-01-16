@@ -228,9 +228,9 @@ class CategoriesListModel(QtCore.QAbstractListModel):
         return None
 
 class Controller(QtCore.QObject):
-    def __init__(self, rc, si):
+    def __init__(self, view, si):
         QtCore.QObject.__init__(self)
-        self.rc = rc
+        self.view = view
         self.si = si
 
     @QtCore.Slot(QtCore.QObject)
@@ -251,8 +251,8 @@ class Controller(QtCore.QObject):
         categories, packages = self.search(value, cat)
         packageList = PackageListModel(packages)
         categoriesList = CategoriesListModel(categories)
-        self.rc.setContextProperty('listPackagesModel', packageList)
-        self.rc.setContextProperty('listCategoriesModel', categoriesList)
+        self.view.rootContext().setContextProperty('listPackagesModel', packageList)
+        self.view.rootContext().setContextProperty('listCategoriesModel', categoriesList)
 
     @QtCore.Slot(QtCore.QObject)
     def searchPkgs(self, textInput):
@@ -260,8 +260,8 @@ class Controller(QtCore.QObject):
         categories, packages = self.search(value)
         packageList = PackageListModel(packages)
         categoriesList = CategoriesListModel(categories)
-        self.rc.setContextProperty('listPackagesModel', packageList)
-        self.rc.setContextProperty('listCategoriesModel', categoriesList)
+        self.view.rootContext().setContextProperty('listPackagesModel', packageList)
+        self.view.rootContext().setContextProperty('listCategoriesModel', categoriesList)
 
     @QtCore.Slot(QtCore.QObject)
     def init(self, root):
@@ -272,9 +272,8 @@ class Controller(QtCore.QObject):
 
     def finished(self):
         """Medias finished loading"""
-        self.loadScreenData['loadScreen'].setProperty("visible", False)
-        self.loadScreenData['loadScreenNext'].setProperty("visible", True)
         searchView = self.loadScreenData['loadScreenNext']
+        self.view.rootObject().setProperty('state', 'showSearchView')
 
     def progress(self, text):
         """Medias are loading, show progress"""
@@ -361,7 +360,7 @@ if __name__ == "__main__":
 
     rc = view.rootContext()
 
-    controller = Controller(rc, si)
+    controller = Controller(view, si)
     packageList = PackageListModel(packages)
     mediasList = CategoriesListModel(medias)
 
