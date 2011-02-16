@@ -11,7 +11,6 @@ import os
 import sys
 import re
 import gzip
-from collections import OrderedDict
 import threading
 import time
 
@@ -50,7 +49,7 @@ class Repo:
 
     def find_medias(self):
         """Attempts to locate and configure available medias"""
-        medias = OrderedDict()
+        medias = {}
         media_r = re.compile('^(.*) {([\s\S]*?)\s*}', re.MULTILINE)
         ignore_r = re.compile('.*(ignore).*')
         update_r = re.compile('.*(update).*')
